@@ -333,7 +333,7 @@ static float bilinear_ripmap(float *x, int w,
 //la fonction principale. On a distingué beaucoup de cas suivant dh<=1, dh>=logw, etc...
 
 static float ripmap_interpolation_at(float *r, int w, int h,
-		float x, float y, int l,double d[2],double A[6],int w1,int h1){
+		float x, float y, int l,double d[2]){
 		int logw = (int) log2(w);
 		int dh = floor(log2(d[0])) + 1;
 		int dl = floor(log2(d[1])) + 1;
