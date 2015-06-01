@@ -160,20 +160,7 @@ uv[0]=wx[0] ;
 
 
 
-int coord_period(int i,int j,int u,int v,int w,int l,double A[6],int w1,int h1){
-	/*double uv[2]  ;
-        uv[0]=(double)u ;
-        uv[1]=(double)v ;
-        periodisation(uv,w/pow(2,i),w/pow(2,j),w1/pow(2,i),w1/pow(2,j),A);
-        
-        int x = good_modulus(uv[0],w/pow(2,i));
-	int y = good_modulus(uv[1],w/pow(2,j));*/
 
-	int x = good_modulus(u,w/pow(2,i));
-	int y = good_modulus(v,w/pow(2,j));
-
-	return (2*(1-1/pow(2,i))*w + 4*(1-1/pow(2,j))*w*w + x + y*2*w)*3+l;
-}
 
 
 
@@ -330,15 +317,15 @@ void cal_D(int x,int y,double *D,double *d,double *coo){
 
 //l'interpolation bilinéaire
 static float bilinear_ripmap(float *x, int w,
-		float p, float q, int l, int d1, int d2,double A[6],int w1,int h1){	
+		float p, float q, int l, int d1, int d2){	
 	float pp = p - 1/2*(pow(2,d1)-1)/pow(2,d1);
 	float qq = q - 1/2*(pow(2,d2)-1)/pow(2,d2);   //on decale car les rectangles représente plusieurs pixels
 	int ip = floor(p);
 	int iq = floor(q);
-	float a = x[coord_period(d1,d2,ip,iq,w,l,A,w1,h1)];
-	float b = x[coord_period(d1,d2,ip+1,iq,w,l,A,w1,h1)];
-	float c = x[coord_period(d1,d2,ip,iq+1,w,l,A,w1,h1)];
-	float dd = x[coord_period(d1,d2,ip+1,iq+1,w,l,A,w1,h1)];
+	float a = x[coord(d1,d2,ip,iq,w,l)];
+	float b = x[coord(d1,d2,ip+1,iq,w,l)];
+	float c = x[coord(d1,d2,ip,iq+1,w,l)];
+	float dd = x[coord(d1,d2,ip+1,iq+1,w,l)];
 	return evaluate_bilinear_cell(a, b, c, dd, pp-ip, qq-iq);
 }
 
@@ -352,37 +339,37 @@ static float ripmap_interpolation_at(float *r, int w, int h,
 		int dl = floor(log2(d[1])) + 1;
 		float a,b,c,dd,u,v;
 		if((pow(2,dh))>w && (pow(2,dl)>w)){return r[coord(logw,logw,0,0,w,l)];}
-		if(dh<=1 && dl<=1){return bilinear_ripmap(r,w,x,y,l,0,0,A,w1,h1);}
+		if(dh<=1 && dl<=1){return bilinear_ripmap(r,w,x,y,l,0,0);}
 		if(pow(2,dh)>w){
-			if(dl<=1){return bilinear_ripmap(r,w,0,y,l,logw,0,A,w1,h1);}
+			if(dl<=1){return bilinear_ripmap(r,w,0,y,l,logw,0);}
 			{
-				a=bilinear_ripmap(r,w,0,y/pow(2,dl-1),l,logw,dl-1,A,w1,h1);
-				b=bilinear_ripmap(r,w,0,y/pow(2,dl-2),l,logw,dl-2,A,w1,h1);
+				a=bilinear_ripmap(r,w,0,y/pow(2,dl-1),l,logw,dl-1);
+				b=bilinear_ripmap(r,w,0,y/pow(2,dl-2),l,logw,dl-2);
 				return (dl-log2(d[1]))*b + (log2(d[1])-dl+1)*a;
 			}
 		}
 		if(pow(2,dl)>w){
-			if(dh<=1){return bilinear_ripmap(r,w,x,0,l,0,logw,A,w1,h1);}
+			if(dh<=1){return bilinear_ripmap(r,w,x,0,l,0,logw);}
 			{
-				a=bilinear_ripmap(r,w,x/pow(2,dh-1),0,l,dh-1,logw,A,w1,h1);
-				b=bilinear_ripmap(r,w,x/pow(2,dh-2),0,l,dh-2,logw,A,w1,h1);
+				a=bilinear_ripmap(r,w,x/pow(2,dh-1),0,l,dh-1,logw);
+				b=bilinear_ripmap(r,w,x/pow(2,dh-2),0,l,dh-2,logw);
 				return (dh-log2(d[0]))*b + (log2(d[0])-dh+1)*a;
 			}
 		}
 		if(dh<=1){
-			a=bilinear_ripmap(r,w,x,y/pow(2,dl-1),l,0,dl-1,A,w1,h1);
-			b=bilinear_ripmap(r,w,x,y/pow(2,dl-2),l,0,dl-2,A,w1,h1);
+			a=bilinear_ripmap(r,w,x,y/pow(2,dl-1),l,0,dl-1);
+			b=bilinear_ripmap(r,w,x,y/pow(2,dl-2),l,0,dl-2);
 			return (dl-log2(d[1]))*b + (log2(d[1])-dl+1)*a;}
 		if(dl<=1){
-			a=bilinear_ripmap(r,w,x/pow(2,dh-1),y,l,dh-1,0,A,w1,h1);
-			b=bilinear_ripmap(r,w,x/pow(2,dh-2),y,l,dh-2,0,A,w1,h1);
+			a=bilinear_ripmap(r,w,x/pow(2,dh-1),y,l,dh-1,0);
+			b=bilinear_ripmap(r,w,x/pow(2,dh-2),y,l,dh-2,0);
 			return (dh-log2(d[0]))*b + (log2(d[0])-dh+1)*a;
 		
 		}
-		a=bilinear_ripmap(r,w,x/pow(2,dh-1),y/pow(2,dl-1),l,dh-1,dl-1,A,w1,h1);
-		b=bilinear_ripmap(r,w,x/pow(2,dh-2),y/pow(2,dl-1),l,dh-2,dl-1,A,w1,h1);
-		c=bilinear_ripmap(r,w,x/pow(2,dh-1),y/pow(2,dl-2),l,dh-1,dl-2,A,w1,h1);
-		dd=bilinear_ripmap(r,w,x/pow(2,dh-2),y/pow(2,dl-2),l,dh-2,dl-2,A,w1,h1);
+		a=bilinear_ripmap(r,w,x/pow(2,dh-1),y/pow(2,dl-1),l,dh-1,dl-1);
+		b=bilinear_ripmap(r,w,x/pow(2,dh-2),y/pow(2,dl-1),l,dh-2,dl-1);
+		c=bilinear_ripmap(r,w,x/pow(2,dh-1),y/pow(2,dl-2),l,dh-1,dl-2);
+		dd=bilinear_ripmap(r,w,x/pow(2,dh-2),y/pow(2,dl-2),l,dh-2,dl-2);
 		u=(pow(2,dh)-d[0])/pow(2,dh);
 		v=(pow(2,dl)-d[1])/pow(2,dl);
 		return u*v*dd + (1-u)*v*b + (1-v)*u*c + (1-u)*(1-v)*a;
