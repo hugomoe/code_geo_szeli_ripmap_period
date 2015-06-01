@@ -143,17 +143,7 @@ int apply_homography_ripmap(float *img,float *img_f,int w,int h,int w_f,int h_f,
 		//on doit faire une copie de p, sinon il ne veut pas dŽcaler...
 		double coo[2];
 		coo[0]=p[0]; coo[1]=p[1];
-		/*
-                //essai de périodisation : en fait c'est normal que ça n'a pas fonctionné.
-        double uv[2]  ;
-        uv[0]=(double)coo[0] ;
-        uv[1]=(double)coo[1] ;
-        periodisation(uv,w,h,w1,h1,A);
-
-        coo[0] = uv[0];
-        coo[1] = uv[1];
-                //fin essai de périodisation
-        */
+	
 
 		//On decale l'origine du rectangle pour que le parallŽlogramme soit ˆ l'intŽrieur
 		if(dudx<0){coo[0] += dudx;}
@@ -164,7 +154,7 @@ int apply_homography_ripmap(float *img,float *img_f,int w,int h,int w_f,int h_f,
 		for (int l = 0; l < 3; l++)
 		{
 
-                //essai de périodisation : en fait c'est normal que ça n'a pas fonctionné.
+                //Périodisation :
         double uv[2]  ;
         uv[0]=(double)coo[0] ;
         uv[1]=(double)coo[1] ;
@@ -172,9 +162,9 @@ int apply_homography_ripmap(float *img,float *img_f,int w,int h,int w_f,int h_f,
 
         coo[0] = uv[0];
         coo[1] = uv[1];
-                //fin essai de périodisation
+                //fin périodisation
         int idx = l + 3 * (w_f * j + i);
-        img_f[idx]=ripmap_interpolation_at(ripmap, w, h, coo[0], coo[1], l, d,A,w1,h1);
+        img_f[idx]=ripmap_interpolation_at(ripmap, w, h, coo[0], coo[1], l, d);
 		}
 	}
 	return 0;
