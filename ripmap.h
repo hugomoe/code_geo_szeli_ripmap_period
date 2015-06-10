@@ -53,108 +53,71 @@
 // périodisation :
 
 
-int calc_rot(double pt[2],int w2,int h2,double A[6]){
-	double ptbis[2] ;
-        double det_A=A[0]*A[4]-A[1]*A[3] ;
-        //double AA[6] = {A[4]/det_A,-A[1]/det_A,(A[1]*A[5]-A[4]*A[2])/det_A,-A[3]/det_A,A[0]/det_A,(-A[0]*A[5]+A[3]*A[2])/det_A};
-        double AA[6] = {A[0],A[1],A[2],A[3],A[4],A[5]};
-        ptbis[0]=AA[0]*pt[0]+AA[1]*pt[1]+AA[2]; // terme de translation pour faire une rotation par rapport au centre de l'image
-        ptbis[1]=AA[3]*pt[0]+AA[4]*pt[1]+AA[5];
-        pt[0]=ptbis[0];
-        pt[1]=ptbis[1];
-
- return 0 ;
+int calc_rot(double pt[2],double A[6]){
+    double ptbis[2] = {pt[0],pt[1]};
+    double det_A = A[0]*A[4]-A[3]*A[1];
+    double AA[6] = {
+        A[4]/det_A,
+        -A[1]/det_A,
+        (A[1]*A[5]-A[4]*A[2])/det_A,
+        -A[3]/det_A,
+        A[0]/det_A,
+        (-A[0]*A[5]+A[3]*A[2])/det_A
+    };
+    pt[0]=AA[0]*ptbis[0]+AA[1]*ptbis[1]+AA[2];
+    pt[1]=AA[3]*ptbis[0]+AA[4]*ptbis[1]+AA[5];
+    return 0;
 }
 
 
 
-int calc_vect(double vect1[2],double vect2[2],double centre[2],int w2,int h2 ,int dim1,int dim2,double A[6]){
-	double pt1[2]={0,0};
-        double pt2[2]={0,dim2};
-        double pt3[2]={dim1,0};
-        //double pt4[2]={dim1,dim2}; useless...
-        calc_rot(pt1,dim1,dim2,A);
-        calc_rot(pt2,dim1,dim2,A);
-	calc_rot(pt3,dim1,dim2,A);
-	//calc_rot(pt4,dim1,dim2,A);
-        // attention : prendre dim1=w1, dim2=h1 ...
-        
-        
-        vect1[0]=-(pt1[0]-pt2[0]) ;
-        vect1[1]=-(pt1[1]-pt2[1]) ;
-        vect2[0]=-(pt1[0]-pt3[0]) ;
-	vect2[1]=-(pt1[1]-pt3[1]) ;
+int calc_vect(double vecta[2],double vectb[2],double centre[2],int w1,int h1,double A[6]){
+	double pt1[2]={0,0}; //commence en (0,0), envoyé sur O
+    double pt2[2]={w1,0}; //commence en I, envoyé sur A
+    double pt3[2]={0,h1}; //commence en J, envoyé sur B
+    calc_rot(pt1,A);
+    calc_rot(pt2,A);
+	calc_rot(pt3,A);
 
-        double vect1_test[2] ={vect1[0],vect1[1]};
-        double vect2_test[2] ={vect2[0],vect2[1]};
-
-        /*prendre un base directe (à priori elle l'était déjà avant) :
-        
-        if ((vect1[0]*vect2[1]-vect1[1]*vect2[0])<0){
-        	vect1[0] =vect2_test[0];
-		vect1[1] =vect2_test[1];
-		vect2[0] =vect1_test[0];         
-		vect2[1] =vect1_test[1]; }       
-        fin de prendre une base directe*/ 
-        
-        //calcul du centre :
-        centre[0]=w2/2-(1.0/2.0)*vect1[0]-(1.0/2.0)*vect2[0] ;
-        centre[1]=h2/2-(1.0/2.0)*vect1[1]-(1.0/2.0)*vect2[1] ;
+    //a = OA
+    vecta[0]=pt2[0]-pt1[0];
+    vecta[1]=pt2[1]-pt1[1];
+    //b = OB
+    vectb[0]=pt3[0]-pt1[0];
+	vectb[1]=pt3[1]-pt1[1];
+    //coordonées de O
+    centre[0] = pt1[0];
+    centre[1] = pt1[1];
 
 
 
-
-
- return 0 ;
+    return 0 ;
 }
 
-int periodisation(double uv[2],int w2,int h2 ,int w1,int h1,double A[6]){
+int periodisation(double uv[2], double centre[2], double vecta[2], double vectb[2]){
+    double xy[2]; //x,y coordonnées du point dans la base (a,b)
 
-double vect1[2];
-double vect2[2];
-double centre[2];
-double AAA[6]={A[0],A[1],-w1/2.0,A[3],A[4],-h1/2.0};
-calc_vect(vect2,vect1,centre,h2,w2,h1,w1,AAA) ;
+    //notons P la matrice de (a,b) dans la base (i,j)
+    /**
+      *     (vecta[0] vectb[0])
+      * P = (vecta[0] vectb[0])
+      */
 
-double invcentre[2]={centre[1],centre[0]};
-centre[1]=invcentre[1] ;
-centre[0]=invcentre[0] ;
+    //Changement de base (i,j)->(a,b) :
+    double det=vecta[0]*vectb[1]-vecta[1]*vectb[0]; //det(P)
+    xy[0] = (+vectb[1]*(uv[0]-centre[0])-vectb[0]*(uv[1]-centre[1]))/det;     // (x)          (u)
+    xy[1] = (-vecta[1]*(uv[0]-centre[0])+vecta[0]*(uv[1]-centre[1]))/det;     // (y) = P^(-1) (v)
 
+    //pour être dans le parallélogramme (O,a,b) (i.e. x\in [0,1[, y\in [0,1[):
+    xy[0] = xy[0] - floor(xy[0]);
+    xy[1] = xy[1] - floor(xy[1]);
 
-
-
-
-
-double wx[2]={uv[1],uv[0]};
-uv[1]=wx[0] ;
-uv[0]=wx[1] ;
-
-
-
-//Changement d'origine :
-double wi=uv[0]-centre[0] ;
-double wj=uv[1]-centre[1] ;
-
-//Changement de base :
-double det=vect1[0]*vect2[1]-vect1[1]*vect2[0] ;
-double wa=(vect2[1]*wj-vect2[0]*wi)/det;
-double wb=(-vect1[1]*wj+vect1[0]*wi)/det;
-
-//reduction modulo ce qui va bien :
-double ra=wa-floor(wa);
-double rb=wb-floor(wb);
-
-//changement de base inverse :
- wi=ra*vect1[1]+rb*vect2[1] ;
- wj=ra*vect1[0]+rb*vect2[0] ;
-//retour à l’origine :
-  wx[0]=wi+centre[0] ;
-  wx[1]=wj+centre[1] ;
+    //Changement de base (a,b)->(i,j)
+    uv[0] = vecta[0]*xy[0]+vectb[0]*xy[1]+centre[0];     // (u)     (x)
+    uv[1] = vecta[1]*xy[0]+vectb[1]*xy[1]+centre[1];     // (v) = P (y)
 
 
 
-uv[1]=wx[1] ;
-uv[0]=wx[0] ;
 	return 0 ;
 }
 
