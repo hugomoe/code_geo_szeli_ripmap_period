@@ -97,7 +97,13 @@ void decomp(double H[9],double A[6],double H0[9],double B[6]){
 
 
 int apply_homography_ripmap(float *img,float *img_f,int w,int h,int w_f,int h_f,int mu2,int nu2,int mu3,int nu3,double H0[9],double A[6],int w1,int h1){
-
+	
+        double vecta[2]; //coordonnées de a dans la base (i,j)
+        double vectb[2]; //coordonnées de b dans la base (i,j)
+        double centre[2]; //coordonnées de O dans la base (i,j)
+        calc_vect(vecta,vectb,centre,w1,h1,A);
+        
+        
 	double H[3][3];
 	H[0][0]=H0[0];
 	H[0][1]=H0[1];
